@@ -21,6 +21,10 @@ ProperTimeParametrization::usage = "ProperTimeParametrization[wordline][lambda]"
 ProperTimeToFrameTime::usage = "ProperTimeToFrameTime[wordline][tau]"
 FrameTimeToProperTime::usage = "FrameTimeToProperTime[wordline][t]"
 
+(* Conversion Between SI and Natural Units *)
+ToNaturalUnits::usage = "ToNaturalUnits[quantity]"
+FromNaturalUnits::usage = "FromNaturalUnits[quantity, siUnits]"
+
 Begin["Private`"]
 
 mkFourVector[t_,x_,y_,z_] := FourVector[t,x,y,z]
@@ -90,14 +94,40 @@ FramePosition[FourVector[t_, x_, y_, z_]] := {x, y, z}
 FrameTime[FourVector[t_, x_, y_, z_]] := t
 
 FrameVelocity[wordLine_] := Function[lambda,
-Module[{d=Dt[wordLine[lambda], lambda]}, 
-FramePosition[d/d[[1]]]
+Module[
+	{d=Dt[wordLine[lambda], lambda]}, 
+	FramePosition[d/d[[1]]]
 ]]
 
 FrameAcceleration[wordLine_] := Function[lambda,
-Module[{d=Dt[wordLine[lambda], lambda],dv=Dt[FrameVelocity[wordLine][lambda], lambda]}, 
-dv/d[[1]]
+Module[
+	{
+		d=Dt[wordLine[lambda], lambda],
+		dv=Dt[FrameVelocity[wordLine][lambda], lambda]
+	}, 
+	dv/d[[1]]
 ]]
+
+
+(* Unit Conversion *)
+
+TimeUnitPower[dims_] := Module[
+  {timeUnits = Cases[dims, {"TimeUnit", t_} -> t]},
+  If[Length[timeUnits] == 0, 0,timeUnits[[1]] ]
+]
+
+ToNaturalUnits[q_] := Module[
+  {si = UnitConvert[q], dims},
+  dims = UnitDimensions[si];
+  si*Quantity[3*^8, "Meters/Seconds"]^TimeUnitPower[dims]
+]
+
+FromNaturalUnits[q_, siUnits_] := Module[
+  {dims},
+  dims = UnitDimensions[Quantity[1, siUnits]];
+  q/Quantity[3*^8, "Meters/Seconds"]^TimeUnitPower[dims]
+]
+
 
 End[]
 
