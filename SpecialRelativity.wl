@@ -2,6 +2,10 @@ BeginPackage["SpecialRelativity`"]
 
 mkFourVector::usage = "mkFourVector[t,x,y,z] - create a four-vector"
 FourVectorQ::usage = "check if argument is a four-vector"
+LightlikeQ::usage = "check if argument is a lightlike four-vector"
+TimelikeQ::usage = "check if argument is a timelike four-vector"
+SpacelikeQ::usage = "check if argument is a spacelike four-vector"
+
 Dtau::usage = "Dtau[wordline][lambda]"
 ProperTime::usage = "ProperTime[wordline][lambda]"
 FourVelocity::usage = "FourVelocity[wordline][lambda]"
@@ -30,6 +34,7 @@ Begin["Private`"]
 mkFourVector[t_,x_,y_,z_] := FourVector[t,x,y,z]
 mkFourVector[t_,x_,y_] := FourVector[t,x,y,0]
 mkFourVector[t_,x_] := FourVector[t,x,0,0]
+mkFourVector[t_] := FourVector[t,0,0,0]
 
 FourVectorQ[FourVector[__]] := True
 FourVectorQ[x_] := False
@@ -48,8 +53,16 @@ rowBox=RowBox[{"FourVector","[",
 FourVector /: Dot[FourVector[t1_,x1_,y1_,z1_],FourVector[t2_,x2_,y2_,z2_]]:=t1 t2 - (x1 x2 + y1 y2 + z1 z2)
 FourVector /: Divide[FourVector[t_,x_,y_,z_],s_] := FourVector[t/s,x/s,y/s,z/s]
 FourVector /: Times[FourVector[t_,x_,y_,z_],s_] := FourVector[t*s,x*s,y*s,z*s]
+FourVector /: Plus[FourVector[t1_,x1_,y1_,z1_],FourVector[t2_,x2_,y2_,z2_]] := FourVector[t1+t2,x1+x2,y1+y2,z1+z2]
 
 FourVector /: Norm[FourVector[v__]] := Sqrt[FourVector[v].FourVector[v]]
+
+LightlikeQ[v_FourVector] := v.v == 0
+TimelikeQ[v_FourVector] := v.v > 0
+SpacelikeQ[v_FourVector] := v.v < 0
+
+(* Working with word lines *)
+
 FourVector /: Dt[FourVector[t_,x_,y_,z_]] := FourVector[Dt[t],Dt[x],Dt[y],Dt[z]]
 FourVector /: Dt[FourVector[t_,x_,y_,z_], vars_] := FourVector[Dt[t, vars],Dt[x, vars],Dt[y, vars],Dt[z, vars]]
 
