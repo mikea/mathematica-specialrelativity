@@ -29,8 +29,11 @@ FrameTimeToProperTime::usage = "FrameTimeToProperTime[wordline][t]"
 ToNaturalUnits::usage = "ToNaturalUnits[quantity]"
 FromNaturalUnits::usage = "FromNaturalUnits[quantity, siUnits]"
 
+LorenzBoost::usage = "LorenzBoost[{x_, y_, z_}, v_] - lorenz boost matrix in a given direction"
+
 Begin["Private`"]
 
+mkFourVector[{t_,x_,y_,z_}] := FourVector[t,x,y,z]
 mkFourVector[t_,x_,y_,z_] := FourVector[t,x,y,z]
 mkFourVector[t_,x_,y_] := FourVector[t,x,y,0]
 mkFourVector[t_,x_] := FourVector[t,x,0,0]
@@ -50,12 +53,24 @@ rowBox=RowBox[{"FourVector","[",
   InterpretationBox[#1,#2]&@@{rowBox,expr}
 ]
 
-FourVector /: Dot[FourVector[t1_,x1_,y1_,z1_],FourVector[t2_,x2_,y2_,z2_]]:=t1 t2 - (x1 x2 + y1 y2 + z1 z2)
+(* Dot Products *)
+
+FourVector /: Dot[FourVector[t1_,x1_,y1_,z1_],FourVector[t2_,x2_,y2_,z2_]] := t1 t2 - (x1 x2 + y1 y2 + z1 z2)
+FourVector /: Dot[
+  {{a11_,a12_,a13_,a14_},{a21_,a22_,a23_,a24_},{a31_,a32_,a33_,a34_},{a41_,a42_,a43_,a44_}},
+  FourVector[t_,x_,y_,z_]
+  ] := mkFourVector[
+    {{a11,a12,a13,a14},{a21,a22,a23,a24},{a31,a32,a33,a34},{a41,a42,a43,a44}} . {t,x,y,z}
+   ]
+
+FourVector /: Norm[FourVector[v__]] := Sqrt[FourVector[v].FourVector[v]]
+
+(* Algebra *)
+
 FourVector /: Divide[FourVector[t_,x_,y_,z_],s_] := FourVector[t/s,x/s,y/s,z/s]
 FourVector /: Times[FourVector[t_,x_,y_,z_],s_] := FourVector[t*s,x*s,y*s,z*s]
 FourVector /: Plus[FourVector[t1_,x1_,y1_,z1_],FourVector[t2_,x2_,y2_,z2_]] := FourVector[t1+t2,x1+x2,y1+y2,z1+z2]
 
-FourVector /: Norm[FourVector[v__]] := Sqrt[FourVector[v].FourVector[v]]
 
 LightlikeQ[v_FourVector] := v.v == 0
 TimelikeQ[v_FourVector] := v.v > 0
@@ -141,6 +156,21 @@ FromNaturalUnits[q_, siUnits_] := Module[
   q/Quantity[3*^8, "Meters/Seconds"]^TimeUnitPower[dims]
 ]
 
+(* Laurentz Boost *)
+
+LorenzBoost[{x_, y_, z_}, v_] := Module[
+  { 
+    gamma = 1/Sqrt[1 - v^2], 
+    nx, ny, nz
+  },
+  { nx, ny, nz } = Normalize[{x, y, z}];
+  {
+   {       gamma,          -gamma  v nx,         - gamma  v ny,          -gamma v nz  },
+   { -gamma v nx, 1 + (gamma - 1)  nx^2,     (gamma - 1) nx ny,     (gamma - 1) nx nz },
+   { -gamma v ny,     (gamma - 1) ny nx, 1 + (gamma - 1)  ny^2,     (gamma - 1) ny nz },
+   { -gamma v nz,     (gamma - 1) nz nx,     (gamma - 1) nz ny, 1 + (gamma - 1) nz^2  }
+  }
+]
 
 End[]
 
