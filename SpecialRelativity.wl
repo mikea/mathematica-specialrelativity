@@ -156,7 +156,7 @@ FromNaturalUnits[q_, siUnits_] := Module[
   q/Quantity[3*^8, "Meters/Seconds"]^TimeUnitPower[dims]
 ]
 
-(* Laurentz Boost *)
+(* Lorenz Boost *)
 
 LorenzBoost[{x_, y_, z_}, v_] := Module[
   { 
