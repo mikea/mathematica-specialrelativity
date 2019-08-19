@@ -1,3 +1,5 @@
+(* ::Package:: *)
+
 BeginPackage["SpecialRelativity`"]
 
 mkFourVector::usage = "mkFourVector[t,x,y,z] - create a four-vector"
@@ -6,24 +8,26 @@ LightlikeQ::usage = "check if argument is a lightlike four-vector"
 TimelikeQ::usage = "check if argument is a timelike four-vector"
 SpacelikeQ::usage = "check if argument is a spacelike four-vector"
 
-Dtau::usage = "Dtau[wordline][lambda]"
-ProperTime::usage = "ProperTime[wordline][lambda]"
-FourVelocity::usage = "FourVelocity[wordline][lambda]"
-ProperVelocity::usage = "ProperVelocity[wordline][lambda]"
-FourAcceleration::usage = "FourAcceleration[wordline][lambda]"
-ProperAcceleration::usage = "ProperAcceleration[wordline][lambda]"
+Dtau::usage = "Dtau[worldLine][lambda]"
+ProperTimeRate::usage = "ProperTimeRate[worldLine][lambda]"
+ProperTime::usage = "ProperTime[worldLine][lambda]"
+
+FourVelocity::usage = "FourVelocity[worldLine][lambda]"
+ProperVelocity::usage = "ProperVelocity[worldLine][lambda]"
+FourAcceleration::usage = "FourAcceleration[worldLine][lambda]"
+ProperAcceleration::usage = "ProperAcceleration[worldLine][lambda]"
 
 FramePosition::usage = "FramePosition[fourVector]"
 FrameTime::usage = "FrameTime[fourVector]"
-FrameVelocity::usage = "LocalVelocity[wordline][lambda]"
-FrameAcceleration::usage = "LocalAcceleration[wordline][lambda]"
+FrameVelocity::usage = "LocalVelocity[worldLine][lambda]"
+FrameAcceleration::usage = "LocalAcceleration[worldLine][lambda]"
 
 
-FrameTimeParametrization::usage = "FrameTimeParametrization[wordline][lambda]"
-ProperTimeParametrization::usage = "ProperTimeParametrization[wordline][lambda]"
+FrameTimeParametrization::usage = "FrameTimeParametrization[worldLine][lambda]"
+ProperTimeParametrization::usage = "ProperTimeParametrization[worldLine][lambda]"
 
-ProperTimeToFrameTime::usage = "ProperTimeToFrameTime[wordline][tau]"
-FrameTimeToProperTime::usage = "FrameTimeToProperTime[wordline][t]"
+ProperTimeToFrameTime::usage = "ProperTimeToFrameTime[worldLine][tau]"
+FrameTimeToProperTime::usage = "FrameTimeToProperTime[worldLine][t]"
 
 (* Conversion Between SI and Natural Units *)
 ToNaturalUnits::usage = "ToNaturalUnits[quantity]"
@@ -83,58 +87,64 @@ FourVector /: Dt[FourVector[t_,x_,y_,z_], vars_] := FourVector[Dt[t, vars],Dt[x,
 
 (* Proper Time and Time Transformations *)
 
-Dtau[wordLine_] := Function[lambda,
-Simplify[Norm[Dt[wordLine[lambda]]], Assumptions->{Dt[lambda]>0}]]
+Dtau[worldLine_] := Function[lambda,
+  Simplify[Norm[Dt[worldLine[lambda]]], Assumptions->{Dt[lambda]>0}]]
+ProperTimeRate[worldLine_] := Dtau[worldLine]
 
-ProperTime[wordLine_] := Integrate[
-Dtau[wordLine][lambda]/Dt[lambda],{lambda,0,#}, Assumptions->{Dt[lambda]>0}] &
+ProperTime[worldLine_] := Integrate[
+  Dtau[worldLine][lambda]/Dt[lambda],{lambda,0,#}, Assumptions->{Dt[lambda]>0}] &
 
-ProperTimeToFrameTime[wordLine_]:=Function[tau, Module[
-{lambda},
-(FrameTime[wordLine[lambda]] /.#)& /@Solve[tau ==ProperTime[wordLine][lambda],lambda,Reals]]]
+ProperTimeToFrameTime[worldLine_]:=Function[tau, Module[
+  {lambda},
+  (FrameTime[worldLine[lambda]] /.#)& /@Solve[tau ==ProperTime[worldLine][lambda],lambda,Reals]]]
 
-FrameTimeToProperTime[wordLine_]:=Function[t, Module[
-{lambda},
-(ProperTime[wordLine][lambda] /.#)& /@Solve[t == FrameTime[wordLine[lambda]],lambda,Reals]]]
+FrameTimeToProperTime[worldLine_]:=Function[t, Module[
+  {lambda},
+  (ProperTime[worldLine][lambda] /.#)& /@Solve[t == FrameTime[worldLine[lambda]],lambda,Reals]]]
 
-ProperTimeDerivative[expr_, wordLine_]:= Function[lambda,
-Simplify[Dt[expr[lambda]]/Dtau[wordLine][lambda], Assumptions->Dt[lambda]>0]]
+ProperTimeDerivative[expr_, worldLine_]:= Function[lambda,
+  Simplify[Dt[expr[lambda]]/Dtau[worldLine][lambda], Assumptions->Dt[lambda]>0]]
 
 (* Kinematics *)
 
-FourVelocity[wordLine_] := ProperTimeDerivative[wordLine,wordLine]
-ProperVelocity[wordLine_] := Norm[FourVelocity[wordLine][#]]&
+FourVelocity[worldLine_] := ProperTimeDerivative[worldLine,worldLine]
+ProperVelocity[worldLine_] := Norm[FourVelocity[worldLine][#]]&
 
-FourAcceleration[wordLine_] := ProperTimeDerivative[FourVelocity[wordLine],wordLine]
-ProperAcceleration[wordLine_]:=Norm[FourAcceleration[wordLine][#]]&
+FourAcceleration[worldLine_] := ProperTimeDerivative[FourVelocity[worldLine],worldLine]
+ProperAcceleration[worldLine_]:=Norm[FourAcceleration[worldLine][#]]&
 
 (* Parametrizations *)
 
-FrameTimeParametrization[wordLine_] := Function[t, Module[{lambda},
-(wordLine[lambda] /. #&) /@ Solve[t == FrameTime[wordLine[lambda]], lambda, Reals][[1]]]]
+FrameTimeParametrization[worldLine_] := Function[t, Module[{lambda},
+  (worldLine[lambda] /. #&) /@ Solve[t == FrameTime[worldLine[lambda]], lambda, Reals][[1]]]]
 
-ProperTimeParametrization[wordLine_] := Function[t, Module[{lambda},
-(wordLine[lambda] /. #&) /@ Solve[t == ProperTime[wordLine][lambda], lambda, Reals][[1]]]]
+ProperTimeParametrization[worldLine_] := Function[t, Module[{lambda},
+  (worldLine[lambda] /. #&) /@ Solve[t == ProperTime[worldLine][lambda], lambda, Reals][[1]]]]
 
 (* Local Frame Computations *)
 
+FramePosition[worldLine_] := Function[lambda, FramePosition[worldLine[lambda]]]
 FramePosition[FourVector[t_, x_, y_, z_]] := {x, y, z}
+
+FrameTime[worldLine_] := Function[lambda, FrameTime[worldLine[lambda]]]
 FrameTime[FourVector[t_, x_, y_, z_]] := t
 
-FrameVelocity[wordLine_] := Function[lambda,
-Module[
-	{d=Dt[wordLine[lambda], lambda]}, 
-	FramePosition[d/d[[1]]]
-]]
+FrameVelocity[worldLine_] := Function[lambda,
+  Module[
+    {d=Dt[worldLine[lambda], lambda]}, 
+    FramePosition[d/d[[1]]]
+  ]
+]
 
-FrameAcceleration[wordLine_] := Function[lambda,
-Module[
-	{
-		d=Dt[wordLine[lambda], lambda],
-		dv=Dt[FrameVelocity[wordLine][lambda], lambda]
-	}, 
-	dv/d[[1]]
-]]
+FrameAcceleration[worldLine_] := Function[lambda,
+  Module[
+    {
+      d=Dt[worldLine[lambda], lambda],
+      dv=Dt[FrameVelocity[worldLine][lambda], lambda]
+    }, 
+    dv/d[[1]]
+  ]
+]
 
 
 (* Unit Conversion *)
