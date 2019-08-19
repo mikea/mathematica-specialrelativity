@@ -33,7 +33,8 @@ FrameTimeToProperTime::usage = "FrameTimeToProperTime[worldLine][t]"
 ToNaturalUnits::usage = "ToNaturalUnits[quantity]"
 FromNaturalUnits::usage = "FromNaturalUnits[quantity, siUnits]"
 
-LorenzBoost::usage = "LorenzBoost[{x_, y_, z_}, v_] - lorenz boost matrix in a given direction"
+LorenzBoost::usage = "LorenzBoost[{vx_, vy_, vz_}] - lorenz boost matrix in a given direction"
+MCRFBoost::usage = "MCRFBoost[worldLine][tau] - lorenz boost of MCRF"
 
 Begin["Private`"]
 
@@ -168,12 +169,13 @@ FromNaturalUnits[q_, siUnits_] := Module[
 
 (* Lorenz Boost *)
 
-LorenzBoost[{x_, y_, z_}, v_] := Module[
+LorenzBoost[{vx_, vy_, vz_}] := Module[
   { 
-    gamma = 1/Sqrt[1 - v^2], 
-    nx, ny, nz
+    v, gamma, nx, ny, nz
   },
-  { nx, ny, nz } = Normalize[{x, y, z}];
+  v = Sqrt[vx^2+vy^2+vz^2];
+  gamma = 1/Sqrt[1 - v^2];
+  { nx, ny, nz } = {vx, vy, vz}/v;
   {
    {       gamma,          -gamma  v nx,         - gamma  v ny,          -gamma v nz  },
    { -gamma v nx, 1 + (gamma - 1)  nx^2,     (gamma - 1) nx ny,     (gamma - 1) nx nz },
@@ -181,6 +183,8 @@ LorenzBoost[{x_, y_, z_}, v_] := Module[
    { -gamma v nz,     (gamma - 1) nz nx,     (gamma - 1) nz ny, 1 + (gamma - 1) nz^2  }
   }
 ]
+
+MCRFBoost[worldLine_] := Function[tau, LorenzBoost[FrameVelocity[worldLine][tau]]]
 
 End[]
 
