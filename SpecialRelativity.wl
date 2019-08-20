@@ -38,6 +38,10 @@ MCRFBoost::usage = "MCRFBoost[worldLine][tau] - lorenz boost of MCRF"
 
 Begin["Private`"]
 
+(* TODO: vector element access *)
+
+(* Four Vectors *)
+
 mkFourVector[{t_,x_,y_,z_}] := FourVector[t,x,y,z]
 mkFourVector[t_,x_,y_,z_] := FourVector[t,x,y,z]
 mkFourVector[t_,x_,y_] := FourVector[t,x,y,0]
